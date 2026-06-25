@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-gold: #D4AF37;
+  --color-gold-hover: #C59F2E;
+  --color-sophisticated-bg: #0A0A0A;
+  --color-sophisticated-surface: #141414;
+  --color-sophisticated-card: #18181B;
+  --color-sophisticated-input: #1A1A1A;
+  --color-sophisticated-border: #2A2A2A;
+}
+
+/* Custom styles for Sophisticated Dark Theme */
+.serif {
+  font-family: var(--font-serif);
+}
+
+.glass-card {
+  background: var(--color-sophisticated-surface);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(212, 175, 55, 0.25);
+  box-shadow: 0 12px 30px -10px rgba(212, 175, 55, 0.08);
+}
+
+.contact-input {
+  background: var(--color-sophisticated-input);
+  border: 1px solid var(--color-sophisticated-border);
+  color: #EDEDED;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.contact-input:focus {
+  border-color: var(--color-gold);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+.accent-button {
+  background: var(--color-gold);
+  color: #000000;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: all 0.2s ease-in-out;
+}
+
+.accent-button:hover {
+  background: var(--color-gold-hover);
+  transform: translateY(-1px);
+}
+
+.accent-button:active {
+  transform: translateY(0);
+}
+
+/* Custom Print Stylesheets for Professional Resume Exports */
+@media print {
+  /* Hide every normal element on the portfolio page */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  /* Select and isolate ONLY the resume layout to print */
+  #printable-resume-area, #printable-resume-area * {
+    visibility: visible !important;
+  }
+
+  #printable-resume-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Refine all typography and borders for high-contrast grayscale printing */
+  #printable-resume-area h2, 
+  #printable-resume-area h3, 
+  #printable-resume-area h4 {
+    color: #000000 !important;
+    border-color: #111111 !important;
+  }
+
+  #printable-resume-area p, 
+  #printable-resume-area span, 
+  #printable-resume-area li, 
+  #printable-resume-area a {
+    color: #222222 !important;
+  }
+
+  #printable-resume-area .text-gold {
+    color: #111111 !important;
+    font-weight: bold !important;
+  }
+  
+  #printable-resume-area .border-zinc-800 {
+    border-color: #dddddd !important;
+  }
+
+  /* Force headers onto exactly one clean page without trailing orphaned blocks */
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+}

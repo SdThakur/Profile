@@ -1,0 +1,17 @@
+# Portfolio Environment Requirements
+# ------------------------------------------------------------
+# This is a full-stack JavaScript/TypeScript project (Node.js & Express).
+# Dependencies are managed via NPM under package.json.
+# To install all modules, run: 'npm install'
+# ------------------------------------------------------------
+
+# Core Runtime Environment
+node>=18.0.0
+npm>=9.0.0
+
+# Build Toolchains
+typescript>=5.0.0
+vite>=6.0.0
+
+# Optional AI Features Integration (Set as environment variable)
+# GEMINI_API_KEY=
