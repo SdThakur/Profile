@@ -96,14 +96,14 @@ const RESUME_CHUNKS = [
   {
     id: "experience",
     category: "Experience",
-    title: "UPS Remote Data Entry Internship",
+    title: "Remote Data Entry Internship",
     content: [
       "Worked as a Remote Data Entry Intern at UPS (United Parcel Service) from June 2025 to August 2025.",
       "Maintained a 95%+ first-attempt resolution on remote document anomalies.",
       "Processed digital shipments, manifests, and billing databases with 99%+ accuracy.",
       "Streamlined workflows, cutting document completion times for 20+ urgent daily shipment requests."
     ],
-    keywords: ["experience", "job", "work", "ups", "intern", "internship", "data", "entry", "anomaly", "anomalies", "accuracy", "manifest", "billing", "shipments", "shipping", "june", "august", "2025"]
+    keywords: ["experience", "job", "work", "intern", "internship", "data", "entry", "anomaly", "anomalies", "accuracy", "manifest", "billing", "shipments", "shipping", "june", "august", "2025"]
   },
   {
     id: "ibm-ai-agent",
@@ -247,13 +247,13 @@ export default async function handler(req, res) {
     }
 
     const latencyMs = parseFloat((Math.random() * 0.8 + 0.3).toFixed(2));
-    let reply = `⚡ **RAG Pipeline Retrieval Log**:\n`;
-    reply += `• **Status**: ${isFallback ? "Default Context Routing" : "Successful Match"}\n`;
-    reply += `• **Latency**: ${latencyMs}ms | **Similarity Index**: cosine-keyword-calibrated\n`;
-    reply += `• **Retrieval Score**: ${isFallback ? "N/A" : `${activeMatches[0].score}pts`}\n`;
-    reply += `• **Matched Keywords**: [${matchedKeywords.join(", ")}]\n`;
-    reply += `• **Active Chunks**: [${selectedChunks.map((sc) => sc.chunk.title).join(", ")}]\n`;
-    reply += `--------------------------------------------------------------------------------\n\n`;
+    // let reply = `⚡ **RAG Pipeline Retrieval Log**:\n`;
+    // reply += `• **Status**: ${isFallback ? "Default Context Routing" : "Successful Match"}\n`;
+    // reply += `• **Latency**: ${latencyMs}ms | **Similarity Index**: cosine-keyword-calibrated\n`;
+    // reply += `• **Retrieval Score**: ${isFallback ? "N/A" : `${activeMatches[0].score}pts`}\n`;
+    // reply += `• **Matched Keywords**: [${matchedKeywords.join(", ")}]\n`;
+    // reply += `• **Active Chunks**: [${selectedChunks.map((sc) => sc.chunk.title).join(", ")}]\n`;
+    // reply += `--------------------------------------------------------------------------------\n\n`;
 
     if (isFallback) {
       if (isGreeting) {
@@ -262,7 +262,7 @@ export default async function handler(req, res) {
         reply += `I couldn't find an exact keyword match in my database for your question ("${query}"). However, here is Satya's general profile and skill set to help you:\n\n`;
       }
     } else {
-      reply += `Based on Satya's resume database, the local RAG pipeline retrieved the following highly relevant context:\n\n`;
+      reply += `Based on Satya's resume database, the local RAG pipeline retrieved the following highly relevant context for you:\n\n`;
     }
 
     selectedChunks.forEach((sc, idx) => {
