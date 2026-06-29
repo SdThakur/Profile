@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Mail, MapPin, Phone, ShieldCheck } from 'lucide-react';
+import { Mail, MapPin, Linkedin, ShieldCheck } from 'lucide-react';
 import { personalInfo } from '../data';
 
 function ThreeDGridBackground() {
@@ -32,6 +32,12 @@ export default function Contact() {
       label: 'Email',
       value: personalInfo.email,
       href: `mailto:${personalInfo.email}`,
+    },
+    {
+      icon: Linkedin,
+      label: 'LinkedIn',
+      value: 'https://www.linkedin.com/in/satya-thakur',
+      href: personalInfo.linkedin,
     },
     {
       icon: MapPin,
@@ -84,7 +90,12 @@ export default function Contact() {
                   {label}
                 </span>
                 {href ? (
-                  <a href={href} className="text-zinc-200 text-xs font-semibold hover:text-gold transition-colors block break-all">
+                  <a 
+                    href={href} 
+                    target={label === 'LinkedIn' ? '_blank' : undefined}
+                    rel={label === 'LinkedIn' ? 'noopener noreferrer' : undefined}
+                    className="text-zinc-200 text-xs font-semibold hover:text-gold transition-colors block break-all"
+                  >
                     {value}
                   </a>
                 ) : (
