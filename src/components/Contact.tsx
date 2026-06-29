@@ -42,7 +42,7 @@ export default function Contact() {
     {
       icon: MapPin,
       label: 'Location',
-      value: `${personalInfo.location}, USA`,
+      value: 'Odenton, MD USA',
       href: null,
     },
   ];
