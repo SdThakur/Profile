@@ -42,7 +42,7 @@ export default function Contact() {
     {
       icon: MapPin,
       label: 'Location',
-      value: 'Odenton, MD USA',
+      value: 'Odenton, MD, USA',
       href: null,
     },
   ];
