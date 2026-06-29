@@ -34,12 +34,6 @@ export default function Contact() {
       href: `mailto:${personalInfo.email}`,
     },
     {
-      icon: Phone,
-      label: 'Phone',
-      value: personalInfo.phone,
-      href: `tel:${personalInfo.phone}`,
-    },
-    {
       icon: MapPin,
       label: 'Location',
       value: personalInfo.location,
