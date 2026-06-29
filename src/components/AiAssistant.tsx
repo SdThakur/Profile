@@ -16,7 +16,7 @@ export default function AiAssistant() {
   });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatBodyRef = useRef<HTMLDivElement>(null); 
 
   const sampleQuestions = [
     'What databases is Satya skilled in?',
@@ -26,9 +26,13 @@ export default function AiAssistant() {
   ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  if (chatBodyRef.current) {
+    chatBodyRef.current.scrollTo({
+      top: chatBodyRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+  }
+};
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
@@ -205,7 +209,7 @@ export default function AiAssistant() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <div ref={messagesEndRef} />
+            <div ref={chatBodyRef} />
           </div>
 
           {/* Prompt suggestions inside Chat container */}
