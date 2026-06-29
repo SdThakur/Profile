@@ -1,13 +1,13 @@
 // api/chat.js
-// Local RAG pipeline — no external AI API
-// Retrieve → rank → template-generate from scored chunks
+// Local RAG pipeline with conversation memory — no external AI API
 
 const STOP_WORDS = new Set([
   "a","an","the","and","or","but","is","are","was","were","of","to","in","for",
   "on","with","about","what","how","who","where","can","you","tell","me","he",
   "his","him","satya","thakur","resume","portfolio","please","give","show","get",
   "any","some","has","have","had","been","be","do","does","did","at","by","i",
-  "like","want","your","his","their","my","its"
+  "like","want","your","their","my","its","sure","okay","ok","yes","yep","yeah",
+  "cool","great","nice","alright","got","it","sounds","good","go","ahead","tell"
 ]);
 
 // ─── Knowledge base ─────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ const RESUME_CHUNKS = [
       "Similarity threshold tuned from 0.75 → 0.45: +35% recall, 90%+ precision.",
       "Migrated generation layer to google-genai SDK across 15+ API call sites."
     ],
-    keywords: ["rag","pipeline","ai","document","search","retrieval","chroma","chromadb","embeddings","vector","similarity","fastapi","streamlit","gemini","sdk","transformers","sentence-transformers","threshold","precision","recall","nlp","llm","semantic","search"]
+    keywords: ["rag","pipeline","ai","document","search","retrieval","chroma","chromadb","embeddings","vector","similarity","fastapi","streamlit","gemini","sdk","transformers","sentence-transformers","threshold","precision","recall","nlp","llm","semantic"]
   },
   {
     id: "parking-mgmt",
@@ -125,16 +125,31 @@ const RESUME_CHUNKS = [
   }
 ];
 
-// ─── Intent detection ──────────────────────────────────────────────────────────
+// ─── Intent config ──────────────────────────────────────────────────────────────
 const INTENTS = {
-  greeting:    ["hi","hello","hey","greetings","yo","sup","howdy","welcome","whats up","what's up"],
-  projects:    ["project","projects","built","build","made","created","work on","working on","portfolio","side project"],
-  contact:     ["contact","email","reach","hire","hiring","available","availability","connect","linkedin","github"],
-  experience:  ["experience","internship","intern","worked","work history","job","employment","ups"],
-  skills:      ["skill","skills","know","tech","stack","languages","tools","use","using","proficient"],
-  education:   ["school","study","degree","gpa","college","university","umbc","graduate","graduation","coursework"],
+  greeting:       ["hi","hello","hey","greetings","yo","sup","howdy","welcome"],
+  projects:       ["project","projects","built","build","made","created","portfolio","side project"],
+  contact:        ["contact","email","reach","hire","hiring","available","availability","connect","linkedin","github"],
+  experience:     ["experience","internship","intern","worked","work history","job","employment","ups"],
+  skills:         ["skill","skills","tech","stack","languages","tools","proficient"],
+  education:      ["school","study","degree","gpa","college","university","umbc","graduate","graduation","coursework"],
   certifications: ["cert","certs","certification","certifications","certificate","certified","credential","badge"]
 };
+
+// Affirmations — user is saying "yes go on" or "tell me more"
+const CONTINUATIONS = new Set([
+  "sure","okay","ok","yes","yep","yeah","cool","great","alright","go on",
+  "tell me more","more","continue","and","so","what else","anything else","more info"
+]);
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+function tokenize(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
+}
 
 function detectIntent(tokens, rawQuery) {
   const q = rawQuery.toLowerCase();
@@ -144,89 +159,113 @@ function detectIntent(tokens, rawQuery) {
   return null;
 }
 
-// ─── Scoring ───────────────────────────────────────────────────────────────────
-function scoreChunks(tokens) {
-  return RESUME_CHUNKS.map((chunk) => {
-    let score = 0;
-    const hits = new Set();
-
-    tokens.forEach((token) => {
-      if (chunk.keywords.includes(token)) {
-        score += 15; hits.add(token);
-      } else {
-        const partial = chunk.keywords.find((kw) => kw.includes(token) || token.includes(kw));
-        if (partial) { score += 8; hits.add(token); }
-      }
-      if (chunk.title.toLowerCase().includes(token)) score += 5;
-      chunk.content.forEach((line) => { if (line.toLowerCase().includes(token)) score += 2; });
-    });
-
-    score += hits.size * 5; // diversity bonus
-    return { chunk, score, hits: Array.from(hits) };
-  });
+function isContinuation(rawQuery) {
+  const q = rawQuery.toLowerCase().trim();
+  return CONTINUATIONS.has(q) || (q.split(/\s+/).length <= 3 && [...CONTINUATIONS].some((c) => q.includes(c)));
 }
 
-// ─── Response builder ──────────────────────────────────────────────────────────
-// Builds a natural-reading reply from retrieved chunks rather than a raw data dump.
-function buildReply({ selected, intent, isFallback, query, tokens }) {
-  const chunkMap = Object.fromEntries(selected.map((s) => [s.chunk.id, s.chunk]));
+// Extract the last assistant intent from history so we can continue it
+function lastAssistantIntent(history) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].role === "assistant" && history[i].intent) {
+      return history[i].intent;
+    }
+  }
+  return null;
+}
 
-  // ── Greeting ────────────────────────────────────────────────────────────────
+// Extract chunk ids already shown so we don't repeat them
+function shownChunkIds(history) {
+  const ids = new Set();
+  history.forEach((turn) => {
+    if (turn.role === "assistant" && Array.isArray(turn.chunkIds)) {
+      turn.chunkIds.forEach((id) => ids.add(id));
+    }
+  });
+  return ids;
+}
+
+// ─── Scoring ────────────────────────────────────────────────────────────────────
+function scoreChunks(tokens, excludeIds = new Set()) {
+  return RESUME_CHUNKS
+    .filter((c) => !excludeIds.has(c.id))
+    .map((chunk) => {
+      let score = 0;
+      const hits = new Set();
+      tokens.forEach((token) => {
+        if (chunk.keywords.includes(token)) { score += 15; hits.add(token); }
+        else {
+          const partial = chunk.keywords.find((kw) => kw.includes(token) || token.includes(kw));
+          if (partial) { score += 8; hits.add(token); }
+        }
+        if (chunk.title.toLowerCase().includes(token)) score += 5;
+        chunk.content.forEach((line) => { if (line.toLowerCase().includes(token)) score += 2; });
+      });
+      score += hits.size * 5;
+      return { chunk, score, hits: Array.from(hits) };
+    });
+}
+
+// ─── Response builder ───────────────────────────────────────────────────────────
+function buildReply({ selected, intent, isFallback, isCont, query, prevIntent }) {
+  // Greeting
   if (intent === "greeting") {
     return (
-      `Hey! I'm Satya's portfolio assistant — I can tell you about his projects, skills, experience, education, or certifications.\n\n` +
+      `Hey! I'm Satya's portfolio assistant — ask me about his projects, skills, experience, education, or certifications.\n\n` +
       `**Quick highlights:**\n` +
       `• 🎓 CS student at UMBC, graduating December 2026\n` +
-      `• 🛠 Full-stack + systems engineer — Python, C, React, FastAPI, Docker\n` +
-      `• 🚀 Key projects: RAG Pipeline, Parking DBMS, Kernel Driver, Task Scheduler\n` +
-      `• 📬 Available for SWE internships & co-ops\n\n` +
+      `• 🛠 Full-stack + systems — Python, C, React, FastAPI, Docker\n` +
+      `• 🚀 Projects: RAG Pipeline, Parking DBMS, Kernel Driver, Task Scheduler\n` +
+      `• 📬 Open to SWE internships & co-ops\n\n` +
       `What would you like to know?`
     );
   }
 
-  // ── Contact intent shortcut ─────────────────────────────────────────────────
+  // Contact shortcut
   if (intent === "contact") {
     return (
       `Here's how to reach Satya:\n\n` +
       `• **Email:** tsatya487@gmail.com\n` +
       `• **GitHub:** github.com/SdThakur\n\n` +
-      `He's actively looking for SWE internships and co-op roles starting Fall / Winter 2026.`
+      `He's actively looking for SWE internships and co-ops starting Fall / Winter 2026.`
     );
   }
 
-  // ── Certifications shortcut ─────────────────────────────────────────────────
-  if (intent === "certifications" && chunkMap["certifications"]) {
-    const c = chunkMap["certifications"];
-    let r = `Satya holds **${c.content.length} professional certifications**:\n\n`;
-    c.content.forEach((line) => { r += `• ${line}\n`; });
+  // Continuation with no new tokens → offer to expand on previous topic
+  if (isCont && selected.length === 0) {
+    const topic = prevIntent || "his background";
+    return `Sure! Want me to go deeper on **${topic}**, or is there something specific you'd like to know?`;
+  }
+
+  // Certifications shortcut
+  const certChunk = selected.find((s) => s.chunk.id === "certifications");
+  if (intent === "certifications" && certChunk) {
+    let r = `Satya holds **6 professional certifications**:\n\n`;
+    certChunk.chunk.content.forEach((line) => { r += `• ${line}\n`; });
     return r;
   }
 
-  // ── General: render retrieved chunks as clean sections ───────────────────────
-  // Group by category for a more natural flow
-  const sections = [];
-
-  // Projects first if intent is projects
+  // General: render sections
   const projectChunks = selected.filter((s) => s.chunk.category === "Project");
   const otherChunks   = selected.filter((s) => s.chunk.category !== "Project");
-  const ordered = intent === "projects"
-    ? [...projectChunks, ...otherChunks]
-    : [...otherChunks, ...projectChunks];
+  const ordered = intent === "projects" ? [...projectChunks, ...otherChunks] : [...otherChunks, ...projectChunks];
 
-  ordered.forEach(({ chunk }) => {
-    let section = `**${chunk.title}** *(${chunk.category})*\n`;
-    chunk.content.forEach((line) => { section += `• ${line}\n`; });
-    sections.push(section);
+  const sections = ordered.map(({ chunk }) => {
+    let s = `**${chunk.title}** *(${chunk.category})*\n`;
+    chunk.content.forEach((line) => { s += `• ${line}\n`; });
+    return s;
   });
 
   const intro = isFallback
-    ? `I didn't find an exact match for "${query}", but here's Satya's general profile:\n\n`
-    : `Here's what I found for you:\n\n`;
+    ? `I didn't catch a specific topic in "${query}" — here's Satya's general profile:\n\n`
+    : isCont
+      ? `Here's more on that:\n\n`
+      : `Here's what I found:\n\n`;
 
-  return intro + sections.join("\n") + `\n---\n*Ask about a specific project, skills, certifications, or how to get in touch!*`;
+  return intro + sections.join("\n") + `\n---\n*Ask about a specific project, his skills, certifications, or how to get in touch!*`;
 }
 
-// ─── Handler ───────────────────────────────────────────────────────────────────
+// ─── Handler ─────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST")    return res.status(405).json({ error: "Method not allowed" });
@@ -234,65 +273,73 @@ export default async function handler(req, res) {
   const startTime = Date.now();
 
   try {
-    const { message } = req.body;
+    // history = array of { role, content, intent?, chunkIds? } from the client
+    const { message, history = [] } = req.body;
     if (!message) return res.status(400).json({ error: "Message payload is required." });
 
-    const query = message.trim();
+    const query    = message.trim();
+    const cont     = isContinuation(query);
+    const prevIntent = lastAssistantIntent(history);
+    const seen     = shownChunkIds(history);
 
-    // 1. Tokenise
-    const tokens = query
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, " ")
-      .split(/\s+/)
-      .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
+    // 1. Tokenise — if it's a continuation, also pull tokens from the last user turn
+    let tokens = tokenize(query);
+    if (cont && tokens.length === 0) {
+      // Inherit tokens from the last user message in history
+      const lastUser = [...history].reverse().find((h) => h.role === "user");
+      if (lastUser) tokens = tokenize(lastUser.content);
+    }
 
-    // 2. Detect intent
-    const intent = detectIntent(tokens, query);
-    const isGreeting = intent === "greeting" || tokens.length === 0;
+    // 2. Detect intent — fall back to previous if continuation
+    let intent = detectIntent(tokens, query);
+    if (!intent && cont) intent = prevIntent;
 
-    // 3. Retrieve + rank
-    const scored  = scoreChunks(tokens);
+    // 3. Retrieve — exclude already-shown chunks on continuations
+    const excludeOnCont = cont ? seen : new Set();
+    const scored  = scoreChunks(tokens, excludeOnCont);
     const active  = scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
-    let selected, isFallback;
 
+    let selected, isFallback;
     if (active.length > 0) {
       const topScore = active[0].score;
       selected   = active.filter((x) => x.score >= topScore * 0.6).slice(0, 3);
       isFallback = false;
-    } else {
-      // Fallback: bio + skills (always useful)
+    } else if (!cont) {
       selected   = [
         { chunk: RESUME_CHUNKS[0], score: 0, hits: [] },
         { chunk: RESUME_CHUNKS[2], score: 0, hits: [] }
       ];
       isFallback = true;
+    } else {
+      selected   = [];
+      isFallback = false;
     }
 
-    // Intent-aware override: if intent maps to a specific chunk, surface it
+    // Pin intent-specific chunk to top if not already present
     const intentChunkMap = {
-      contact:          "bio",
-      experience:       "experience",
-      education:        "education",
-      skills:           "skills",
-      certifications:   "certifications",
+      contact: "bio", experience: "experience", education: "education",
+      skills: "skills", certifications: "certifications"
     };
-    if (intent && intentChunkMap[intent] && !isFallback) {
+    if (intent && intentChunkMap[intent]) {
       const pinId = intentChunkMap[intent];
-      const alreadyIn = selected.some((s) => s.chunk.id === pinId);
-      if (!alreadyIn) {
+      if (!selected.some((s) => s.chunk.id === pinId) && !excludeOnCont.has(pinId)) {
         const pinned = RESUME_CHUNKS.find((c) => c.id === pinId);
-        if (pinned) selected.unshift({ chunk: pinned, score: 999, hits: [] });
-        selected = selected.slice(0, 3);
+        if (pinned) { selected.unshift({ chunk: pinned, score: 999, hits: [] }); selected = selected.slice(0, 3); }
       }
     }
 
-    // 4. Build natural reply
-    const reply = buildReply({ selected, intent, isFallback, query, tokens });
+    // 4. Build reply
+    const reply = buildReply({ selected, intent, isFallback, isCont: cont, query, prevIntent });
 
+    // 5. Return — include intent + chunkIds so client can pass them back in history
     return res.json({
       reply,
+      intent,
+      chunkIds: selected.map((s) => s.chunk.id),
       _meta: {
         intent,
+        is_continuation: cont,
+        prev_intent: prevIntent,
         tokens_matched: tokens,
         chunks: selected.map((s) => ({ id: s.chunk.id, score: s.score })),
         is_fallback: isFallback,
