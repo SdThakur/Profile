@@ -43,6 +43,7 @@ export default function Contact() {
       icon: MapPin,
       label: 'Location',
       value: personalInfo.location,
+      value: 'USA'
       href: null,
     },
   ];
