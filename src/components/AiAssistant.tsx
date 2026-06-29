@@ -27,15 +27,38 @@ export default function AiAssistant() {
 
   const scrollToBottom = () => {
   if (chatBodyRef.current) {
-    chatBodyRef.current.scrollTo({
-      top: chatBodyRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
+    const container = chatBodyRef.current;
+    
+    // Find the very last message element inside the container
+    const messages = container.querySelectorAll('[id^="chat-msg-"]');
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1] as HTMLElement;
+      
+      // Calculate the top position of the new message relative to the container
+      const newScrollTop = lastMessage.offsetTop - container.offsetTop - 16; // 16px padding offset
+
+      container.scrollTo({
+        top: newScrollTop,
+        behavior: 'smooth',
+      });
+    } else {
+      // Fallback to absolute bottom for the typing indicator or initial load
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }
 };
-  useEffect(() => {
+
+useEffect(() => {
+  // A tiny timeout ensures AnimatePresence has rendered the new DOM node
+  const timer = setTimeout(() => {
     scrollToBottom();
-  }, [messages, loading]);
+  }, 50);
+  
+  return () => clearTimeout(timer);
+}, [messages, loading]);
 
   const handleSend = async (textToSend: string) => {
     if (!textToSend.trim() || loading) return;
@@ -151,7 +174,7 @@ export default function AiAssistant() {
           </div>
 
           {/* Messages Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#0B0B0B]/40">
+          <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#0B0B0B]/40">
             <AnimatePresence initial={false}>
               {messages.map((msg) => (
                 <motion.div
