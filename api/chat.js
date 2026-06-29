@@ -248,7 +248,6 @@ export default async function handler(req, res) {
 
     const latencyMs = parseFloat((Math.random() * 0.8 + 0.3).toFixed(2));
     let reply = `⚡ **RAG Pipeline Retrieval Log**:\n`;
-    reply += `--------------------------------------------------------------------------------\n\n`;
 
     if (isFallback) {
       if (isGreeting) {
@@ -257,7 +256,7 @@ export default async function handler(req, res) {
         reply += `I couldn't find an exact keyword match in my database for your question ("${query}"). However, here is Satya's general profile and skill set to help you:\n\n`;
       }
     } else {
-      reply += `Based on Satya's resume database, the local RAG pipeline retrieved the following highly relevant context for you:\n\n`;
+      reply += `Based on Satya's resume database, the local RAG pipeline retrieved the following highly relevant context:\n\n`;
     }
 
     selectedChunks.forEach((sc, idx) => {
