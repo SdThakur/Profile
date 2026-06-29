@@ -1,283 +1,310 @@
 // api/chat.js
+// Local RAG pipeline — no external AI API
+// Retrieve → rank → template-generate from scored chunks
 
 const STOP_WORDS = new Set([
-  "a", "an", "the", "and", "or", "but", "is", "are", "was", "were", "of", "to", "in", "for", "on", "with", "about", 
-  "what", "how", "who", "where", "can", "you", "tell", "me", "he", "his", "him", "satya", "thakur", "resume", "portfolio",
-  "please", "give", "show", "get", "any", "some", "has", "have", "had", "been", "be", "do", "does", "did", "at", "by", "i", "like", "want"
+  "a","an","the","and","or","but","is","are","was","were","of","to","in","for",
+  "on","with","about","what","how","who","where","can","you","tell","me","he",
+  "his","him","satya","thakur","resume","portfolio","please","give","show","get",
+  "any","some","has","have","had","been","be","do","does","did","at","by","i",
+  "like","want","your","his","their","my","its"
 ]);
 
+// ─── Knowledge base ─────────────────────────────────────────────────────────────
 const RESUME_CHUNKS = [
   {
     id: "bio",
     category: "Biography",
-    title: "Satya's Profile & Contact Information",
+    title: "Profile & Contact",
     content: [
-      "Satya Thakur is a highly motivated Software Engineer based in Odenton, MD, and is a US Citizen.",
-      "He is currently available for internships, co-ops, and full-time graduate SWE roles starting around Fall 2026 / Winter 2026.",
-      "He is passionate about performance-bound services, systems concurrency, low-level drivers, and LLM orchestration.",
-      "Direct Channels: Email: tsatya487@gmail.com | GitHub: github.com/SdThakur"
+      "Satya Thakur is a Software Engineer based in Odenton, MD — US Citizen.",
+      "Available for internships, co-ops, and full-time SWE roles starting Fall / Winter 2026.",
+      "Passionate about performance-bound services, systems concurrency, low-level drivers, and LLM orchestration.",
+      "Email: tsatya487@gmail.com | GitHub: github.com/SdThakur"
     ],
-    keywords: ["bio", "profile", "who", "satya", "thakur", "contact", "email", "location", "citizen", "citizenship", "maryland", "md", "odenton", "hire", "intern", "internship", "coop", "co-op", "graduate", "role", "jobs", "job", "work", "availability", "address", "about"]
+    keywords: ["bio","profile","who","contact","email","location","citizen","citizenship","maryland","md","odenton","hire","intern","internship","coop","co-op","graduate","role","jobs","job","work","availability","address","about","available","reach","connect"]
   },
   {
     id: "education",
     category: "Education",
     title: "Academic Credentials (UMBC)",
     content: [
-      "Pursuing a Bachelor of Science (B.S.) in Computer Science at the University of Maryland, Baltimore County (UMBC).",
-      "Expected Graduation: December 2026.",
-      "Current Cumulative GPA: 3.34 / 4.0.",
-      "Relevant Coursework: Database Management Systems, Operating Systems, Artificial Intelligence, Computer Networks, Computer Graphics, Data Structures and Algorithms."
+      "B.S. in Computer Science — University of Maryland, Baltimore County (UMBC).",
+      "Expected Graduation: December 2026 | Cumulative GPA: 3.34 / 4.0.",
+      "Relevant Coursework: Database Management Systems, Operating Systems, Artificial Intelligence, Computer Networks, Computer Graphics, Data Structures & Algorithms."
     ],
-    keywords: ["education", "umbc", "gpa", "university", "college", "course", "coursework", "degree", "graduation", "graduating", "major", "class", "classes", "school", "maryland", "baltimore"]
+    keywords: ["education","umbc","gpa","university","college","course","coursework","degree","graduation","graduating","major","class","classes","school","maryland","baltimore","study","studied","bachelor","bs","3.34","december","2026"]
   },
   {
     id: "skills",
-    category: "Skills",
-    title: "Technical Skills Inventory",
+    category: "Technical Skills",
+    title: "Technical Skills",
     content: [
-      "Programming Languages: Python, C, C++, SQL, HTML/CSS, JavaScript, TypeScript.",
-      "Frontend Architecture: React, TailwindCSS, Streamlit for responsive web interfaces.",
-      "Backend & APIs: FastAPI, Node.js, Flask, REST API Design, Express.js.",
-      "Databases & Vector Storage: PostgreSQL, MongoDB, ChromaDB vector databases.",
-      "DevOps & Infrastructure: Docker, Git, GitHub, Linux/Unix environments, Kubernetes."
+      "Languages: Python, C, C++, SQL, HTML/CSS, JavaScript, TypeScript.",
+      "Frontend: React, TailwindCSS, Streamlit.",
+      "Backend & APIs: FastAPI, Node.js, Flask, Express.js.",
+      "Databases: PostgreSQL, MongoDB, ChromaDB (vector).",
+      "DevOps: Docker, Git, GitHub, Linux/Unix, Kubernetes."
     ],
-    keywords: ["skills", "languages", "technical", "programming", "react", "python", "typescript", "postgres", "postgresql", "c", "c++", "javascript", "node", "fastapi", "docker", "git", "github", "linux", "unix", "database", "db", "mongodb", "chromadb", "vector", "kubernetes", "stack", "libraries", "tools", "backend", "frontend"]
+    keywords: ["skills","languages","technical","programming","react","python","typescript","postgres","postgresql","c","c++","javascript","node","fastapi","docker","git","github","linux","unix","database","db","mongodb","chromadb","vector","kubernetes","stack","tools","backend","frontend","tailwind","flask","express","devops","infrastructure","tech"]
   },
   {
     id: "rag-pipeline",
     category: "Project",
-    title: "AI Document RAG Pipeline Project",
+    title: "AI Document RAG Pipeline",
     content: [
-      "Engineered a production-optimized semantic document search and context generation engine.",
-      "Accelerated semantic document retrieval across 10,000+ document chunks, cutting retrieval lookup times by 80%.",
-      "Ingested text files into a ChromaDB vector database utilizing sentence-transformer embeddings.",
-      "Calibrated the similarity threshold from 0.75 to 0.45, boosting document retrieval recall by 35% with 90%+ precision.",
-      "Future-proofed the system by migrating the generation layer to the modern google-genai SDK across 15+ API call sites."
+      "Production-optimized semantic document search and context generation engine.",
+      "Handles 10,000+ document chunks with 80% faster retrieval lookup times.",
+      "Ingests text into ChromaDB via sentence-transformer embeddings.",
+      "Similarity threshold tuned from 0.75 → 0.45: +35% recall, 90%+ precision.",
+      "Migrated generation layer to google-genai SDK across 15+ API call sites."
     ],
-    keywords: ["rag", "pipeline", "ai", "document", "search", "retrieval", "chroma", "chromadb", "embeddings", "vector", "similarity", "fastapi", "streamlit", "gemini", "sdk", "transformers", "sentence-transformers", "threshold", "precision", "recall", "nlp", "llm", "semantic"]
+    keywords: ["rag","pipeline","ai","document","search","retrieval","chroma","chromadb","embeddings","vector","similarity","fastapi","streamlit","gemini","sdk","transformers","sentence-transformers","threshold","precision","recall","nlp","llm","semantic","search"]
   },
   {
     id: "parking-mgmt",
     category: "Project",
-    title: "UMBC Parking Management System Project",
+    title: "UMBC Parking Management System",
     content: [
-      "Automated logistics, spots lookup, and reservation transactions for 500+ parking spots.",
-      "Implemented standard SELECT FOR UPDATE pessimistic concurrency locks at the PostgreSQL layer, successfully preventing double-booking race conditions.",
-      "Achieved a 40% query latency reduction on the live dashboard through B-Tree indexing and SQL materialized views.",
-      "Deployed the entire database and application environment using containerized Docker pipelines."
+      "Automated logistics, spot lookup, and reservation transactions for 500+ parking spots.",
+      "SELECT FOR UPDATE pessimistic locking at PostgreSQL — eliminates double-booking race conditions.",
+      "40% query latency reduction via B-Tree indexing and SQL materialized views.",
+      "Deployed with containerized Docker pipelines."
     ],
-    keywords: ["parking", "management", "postgres", "postgresql", "sql", "spot", "spots", "reservation", "concurrency", "booking", "locks", "lock", "pessimistic", "update", "for update", "latency", "indexing", "b-tree", "materialized", "views", "view", "docker", "python", "streamlit", "race", "conditions"]
+    keywords: ["parking","management","postgres","postgresql","sql","spot","spots","reservation","concurrency","booking","locks","lock","pessimistic","latency","indexing","b-tree","materialized","views","docker","streamlit","race","conditions","umbc","database"]
   },
   {
     id: "task-scheduler",
     category: "Project",
-    title: "Multithreaded Priority Task Scheduler Project",
+    title: "Multithreaded Priority Task Scheduler",
     content: [
-      "Simulated a high-performance, concurrent 3-tier priority scheduler (High/Medium/Low channels) in C Lang.",
-      "Utilized POSIX threads (pthreads), mutual exclusion locks (mutexes), and custom semaphores for synchronization.",
-      "Engineered dynamic starvation prevention (aging elements) and deadlock-avoidance algorithms.",
-      "Successfully processed 1,000+ highly concurrent scheduler tasks, passing strict Valgrind stress testing with zero memory leaks."
+      "High-performance 3-tier priority scheduler (High / Medium / Low) written in C.",
+      "Built with POSIX pthreads, mutexes, and custom semaphores for synchronization.",
+      "Dynamic starvation prevention (aging) and deadlock-avoidance algorithms.",
+      "Processed 1,000+ concurrent tasks — zero memory leaks under Valgrind stress tests."
     ],
-    keywords: ["scheduler", "task", "multithreaded", "concurrency", "pthread", "pthreads", "mutex", "mutexes", "locks", "lock", "semaphore", "semaphores", "starvation", "deadlock", "avoidance", "aging", "c", "valgrind", "memory", "leaks", "leak", "stress", "threads", "priority", "c lang"]
+    keywords: ["scheduler","task","multithreaded","concurrency","pthread","pthreads","mutex","mutexes","locks","semaphore","semaphores","starvation","deadlock","aging","c","valgrind","memory","leaks","threads","priority","systems","os","operating"]
   },
   {
     id: "kernel-driver",
     category: "Project",
-    title: "Linux Kernel Hardware-Adjacent Software Interface Project",
+    title: "Linux Kernel Character Device Driver",
     content: [
-      "Developed a low-level Linux character device driver in C Lang to interface user-space with an 8x8 led game board.",
-      "Authored custom ioctl system-call read and write handlers to manage board hardware coordinate state cycles safely.",
-      "Architected secure kernel-space and user-space memory layout isolation buffers.",
-      "Ensured absolute stability with zero kernel crashes, validated over 100+ stress test cycles with Valgrind memory leak tools."
+      "Low-level Linux character device driver in C — bridges user-space and an 8×8 LED game board.",
+      "Custom ioctl handlers for safe coordinate-state read/write cycles.",
+      "Kernel-space / user-space memory isolation buffers.",
+      "Zero kernel crashes across 100+ Valgrind stress-test cycles."
     ],
-    keywords: ["kernel", "driver", "linux", "character", "device", "char", "ioctl", "hardware", "board", "gameboard", "game", "memory", "crashes", "crash", "valgrind", "user-space", "kernel-space", "leak", "c", "low-level", "os", "operating system"]
+    keywords: ["kernel","driver","linux","character","device","char","ioctl","hardware","board","gameboard","memory","crashes","valgrind","user-space","kernel-space","c","low-level","os","operating","system","module","led"]
   },
   {
     id: "experience",
     category: "Experience",
-    title: "UPS Remote Data Entry Internship",
+    title: "UPS — Remote Data Entry Intern",
     content: [
-      "Worked as a Remote Data Entry Intern at UPS (United Parcel Service) from June 2025 to August 2025.",
-      "Maintained a 95%+ first-attempt resolution on remote document anomalies.",
-      "Processed digital shipments, manifests, and billing databases with 99%+ accuracy.",
-      "Streamlined workflows, cutting document completion times for 20+ urgent daily shipment requests."
+      "Remote Data Entry Intern at UPS, June 2025 – August 2025.",
+      "95%+ first-attempt resolution rate on document anomalies.",
+      "99%+ accuracy processing digital shipments, manifests, and billing databases.",
+      "Streamlined workflows cutting completion time on 20+ urgent daily shipment requests."
     ],
-    keywords: ["experience", "job", "work", "ups", "intern", "internship", "data", "entry", "anomaly", "anomalies", "accuracy", "manifest", "billing", "shipments", "shipping", "june", "august", "2025"]
+    keywords: ["experience","job","work","ups","intern","internship","data","entry","anomaly","accuracy","manifest","billing","shipments","shipping","june","august","2025","employment","worked","role"]
   },
   {
-    id: "ibm-ai-agent",
+    id: "certifications",
     category: "Certifications",
-    title: "IBM - Intelligent by Design: Build an AI Agent",
+    title: "Professional Certifications",
     content: [
-      "Completed the IBM Intelligent by Design: Build an AI Agent certification in June 2026.",
-      "Mastered autonomous AI agents, multi-agent orchestrations, memory cycles, and tool structures.",
-      "Constructed custom agents with prompt templates, task reasoning loops, and external execution triggers."
+      "IBM — Intelligent by Design: Build an AI Agent (June 2026): autonomous agents, multi-agent orchestration, memory cycles, tool structures.",
+      "Anthropic — Claude 101 (June 2026, ID: ddt86947g3pg): context windows, XML output structures, system prompt design, anti-hallucination guardrails.",
+      "Anthropic — AI Fluency Framework & Foundations (June 2026, ID: fharrq8mfwsb): transformer architectures, scaling laws, LLM foundations, AI ethics.",
+      "Walmart USA — Advanced SWE Job Simulation via Forage (May 2026, ID: dSCz55qE4c53YrtMP): system design, DB indexing, memory optimization.",
+      "Commonwealth Bank — SWE Job Simulation via Forage (May 2026, ID: 69f4e3d01943326e70a28862): secure APIs, defensive programming, vulnerability scanning.",
+      "HPE — SWE Job Simulation via Forage (May 2026, ID: QpjGiEwaE4X5yDw7t): Java Spring Boot microservice, REST CRUD, JUnit suites (90%+ coverage)."
     ],
-    keywords: ["ibm", "ai", "agent", "agents", "intelligent", "by", "design", "prompt", "generative", "conversational", "orchestration", "june", "2026", "certification", "certifications"]
-  },
-  {
-    id: "claude-101",
-    category: "Certifications",
-    title: "Anthropic - Claude 101",
-    content: [
-      "Completed the Anthropic Claude 101 certificate of completion in June 2026.",
-      "Credential ID: ddt86947g3pg.",
-      "Gained expertise in Claude 3.5 context windows, XML tags output structures, system prompt design, and anti-hallucination guardrails."
-    ],
-    keywords: ["claude", "anthropic", "101", "xml", "prompt", "structured", "deterministic", "june", "2026", "ddt86947g3pg", "certification", "certifications"]
-  },
-  {
-    id: "ai-fluency",
-    category: "Certifications",
-    title: "Anthropic - AI Fluency Framework & Foundations",
-    content: [
-      "Completed the Anthropic AI Fluency Framework & Foundations certification in June 2026.",
-      "Credential ID: fharrq8mfwsb.",
-      "Studied transformer architectures, scaling laws, LLM foundations, AI ethics, and defensive mitigation rules."
-    ],
-    keywords: ["fluency", "framework", "foundations", "anthropic", "safety", "ethics", "llm", "transformer", "attention", "scaling", "june", "2026", "fharrq8mfwsb", "certification", "certifications"]
-  },
-  {
-    id: "walmart-se",
-    category: "Certifications",
-    title: "Walmart USA - Advanced Software Engineering Job Simulation",
-    content: [
-      "Completed the Walmart USA Advanced Software Engineering Job Simulation via Forage in May 2026.",
-      "Credential ID: dSCz55qE4c53YrtMP.",
-      "Simulated enterprise system design, database indexing strategy, memory optimization, and concurrent traffic pipelines."
-    ],
-    keywords: ["walmart", "usa", "advanced", "system", "design", "concurrency", "forage", "scale", "simulation", "may", "2026", "dscz55qe4c53yrtmp", "certification", "certifications"]
-  },
-  {
-    id: "cba-se",
-    category: "Certifications",
-    title: "Commonwealth Bank - Software Engineering Job Simulation",
-    content: [
-      "Completed the Commonwealth Bank Software Engineering Job Simulation via Forage in May 2026.",
-      "Credential ID: 69f4e3d01943326e70a28862.",
-      "Practiced financial secure APIs design, defensive programming, and code reviews for vulnerability scanning."
-    ],
-    keywords: ["commonwealth", "bank", "cba", "forage", "security", "audit", "defensive", "api", "vulnerability", "fintech", "may", "2026", "69f4e3d01943326e70a28862", "certification", "certifications"]
-  },
-  {
-    id: "hpe-se",
-    category: "Certifications",
-    title: "HPE - Software Engineering Job Simulation",
-    content: [
-      "Completed the HPE Software Engineering Job Simulation via Forage in May 2026.",
-      "Credential ID: QpjGiEwaE4X5yDw7t.",
-      "Engineered an employee management microservice in Java Spring Boot with REST CRUD endpoints and JUnit test suites (90%+ coverage)."
-    ],
-    keywords: ["hpe", "hewlett", "packard", "enterprise", "java", "spring", "boot", "spring boot", "forage", "junit", "crud", "endpoints", "coverage", "may", "2026", "qpjgiewae4x5ydw7t", "certification", "certifications"]
+    keywords: ["ibm","claude","anthropic","101","walmart","commonwealth","bank","hpe","hewlett","packard","forage","certification","certifications","certified","certificate","credential","ai","agent","fluency","framework","foundations","spring","boot","junit","java","security","fintech","orchestration","2026","may","june"]
   }
 ];
 
-export default async function handler(req, res) {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+// ─── Intent detection ──────────────────────────────────────────────────────────
+const INTENTS = {
+  greeting:    ["hi","hello","hey","greetings","yo","sup","howdy","welcome","whats up","what's up"],
+  projects:    ["project","projects","built","build","made","created","work on","working on","portfolio","side project"],
+  contact:     ["contact","email","reach","hire","hiring","available","availability","connect","linkedin","github"],
+  experience:  ["experience","internship","intern","worked","work history","job","employment","ups"],
+  skills:      ["skill","skills","know","tech","stack","languages","tools","use","using","proficient"],
+  education:   ["school","study","degree","gpa","college","university","umbc","graduate","graduation","coursework"],
+  certifications: ["cert","certs","certification","certifications","certificate","certified","credential","badge"]
+};
+
+function detectIntent(tokens, rawQuery) {
+  const q = rawQuery.toLowerCase();
+  for (const [intent, phrases] of Object.entries(INTENTS)) {
+    if (phrases.some((p) => q.includes(p) || tokens.includes(p))) return intent;
+  }
+  return null;
+}
+
+// ─── Scoring ───────────────────────────────────────────────────────────────────
+function scoreChunks(tokens) {
+  return RESUME_CHUNKS.map((chunk) => {
+    let score = 0;
+    const hits = new Set();
+
+    tokens.forEach((token) => {
+      if (chunk.keywords.includes(token)) {
+        score += 15; hits.add(token);
+      } else {
+        const partial = chunk.keywords.find((kw) => kw.includes(token) || token.includes(kw));
+        if (partial) { score += 8; hits.add(token); }
+      }
+      if (chunk.title.toLowerCase().includes(token)) score += 5;
+      chunk.content.forEach((line) => { if (line.toLowerCase().includes(token)) score += 2; });
+    });
+
+    score += hits.size * 5; // diversity bonus
+    return { chunk, score, hits: Array.from(hits) };
+  });
+}
+
+// ─── Response builder ──────────────────────────────────────────────────────────
+// Builds a natural-reading reply from retrieved chunks rather than a raw data dump.
+function buildReply({ selected, intent, isFallback, query, tokens }) {
+  const chunkMap = Object.fromEntries(selected.map((s) => [s.chunk.id, s.chunk]));
+
+  // ── Greeting ────────────────────────────────────────────────────────────────
+  if (intent === "greeting") {
+    return (
+      `Hey! I'm Satya's portfolio assistant — I can tell you about his projects, skills, experience, education, or certifications.\n\n` +
+      `**Quick highlights:**\n` +
+      `• 🎓 CS student at UMBC, graduating December 2026\n` +
+      `• 🛠 Full-stack + systems engineer — Python, C, React, FastAPI, Docker\n` +
+      `• 🚀 Key projects: RAG Pipeline, Parking DBMS, Kernel Driver, Task Scheduler\n` +
+      `• 📬 Available for SWE internships & co-ops\n\n` +
+      `What would you like to know?`
+    );
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  // ── Contact intent shortcut ─────────────────────────────────────────────────
+  if (intent === "contact") {
+    return (
+      `Here's how to reach Satya:\n\n` +
+      `• **Email:** tsatya487@gmail.com\n` +
+      `• **GitHub:** github.com/SdThakur\n\n` +
+      `He's actively looking for SWE internships and co-op roles starting Fall / Winter 2026.`
+    );
   }
+
+  // ── Certifications shortcut ─────────────────────────────────────────────────
+  if (intent === "certifications" && chunkMap["certifications"]) {
+    const c = chunkMap["certifications"];
+    let r = `Satya holds **${c.content.length} professional certifications**:\n\n`;
+    c.content.forEach((line) => { r += `• ${line}\n`; });
+    return r;
+  }
+
+  // ── General: render retrieved chunks as clean sections ───────────────────────
+  // Group by category for a more natural flow
+  const sections = [];
+
+  // Projects first if intent is projects
+  const projectChunks = selected.filter((s) => s.chunk.category === "Project");
+  const otherChunks   = selected.filter((s) => s.chunk.category !== "Project");
+  const ordered = intent === "projects"
+    ? [...projectChunks, ...otherChunks]
+    : [...otherChunks, ...projectChunks];
+
+  ordered.forEach(({ chunk }) => {
+    let section = `**${chunk.title}** *(${chunk.category})*\n`;
+    chunk.content.forEach((line) => { section += `• ${line}\n`; });
+    sections.push(section);
+  });
+
+  const intro = isFallback
+    ? `I didn't find an exact match for "${query}", but here's Satya's general profile:\n\n`
+    : `Here's what I found for you:\n\n`;
+
+  return intro + sections.join("\n") + `\n---\n*Ask about a specific project, skills, certifications, or how to get in touch!*`;
+}
+
+// ─── Handler ───────────────────────────────────────────────────────────────────
+export default async function handler(req, res) {
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")    return res.status(405).json({ error: "Method not allowed" });
+
+  const startTime = Date.now();
 
   try {
     const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Message payload is required." });
-    }
+    if (!message) return res.status(400).json({ error: "Message payload is required." });
 
     const query = message.trim();
-    const tokens = query.toLowerCase().replace(/[^\w\s-]/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP_WORDS.has(t));
-    const greetings = ["hi", "hello", "hey", "greetings", "yo", "sup", "howdy", "welcome"];
-    const isGreeting = tokens.length === 0 || tokens.some((t) => greetings.includes(t));
 
-    const scoredChunks = RESUME_CHUNKS.map((chunk) => {
-      let score = 0;
-      const matchedTokens = [];
-      tokens.forEach((token) => {
-        if (chunk.keywords.includes(token)) {
-          score += 15;
-          matchedTokens.push(token);
-        } else {
-          const partialMatch = chunk.keywords.find((kw) => kw.includes(token) || token.includes(kw));
-          if (partialMatch) {
-            score += 8;
-            matchedTokens.push(token);
-          }
-        }
-        if (chunk.title.toLowerCase().includes(token)) {
-          score += 5;
-        }
-        chunk.content.forEach((bullet) => {
-          if (bullet.toLowerCase().includes(token)) {
-            score += 2;
-          }
-        });
-      });
-      const uniqueMatches = new Set(matchedTokens).size;
-      score += uniqueMatches * 5;
-      return {
-        chunk,
-        score,
-        matchedTokens: Array.from(new Set(matchedTokens))
-      };
-    });
+    // 1. Tokenise
+    const tokens = query
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, " ")
+      .split(/\s+/)
+      .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
 
-    const activeMatches = scoredChunks.filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
-    let selectedChunks = [];
-    let matchedKeywords = [];
-    let isFallback = false;
+    // 2. Detect intent
+    const intent = detectIntent(tokens, query);
+    const isGreeting = intent === "greeting" || tokens.length === 0;
 
-    if (activeMatches.length > 0) {
-      const topScore = activeMatches[0].score;
-      selectedChunks = activeMatches.filter((item) => item.score >= topScore * 0.6).slice(0, 3);
-      const keys = new Set();
-      selectedChunks.forEach((sc) => sc.matchedTokens.forEach((t) => keys.add(t)));
-      matchedKeywords = Array.from(keys);
+    // 3. Retrieve + rank
+    const scored  = scoreChunks(tokens);
+    const active  = scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+    let selected, isFallback;
+
+    if (active.length > 0) {
+      const topScore = active[0].score;
+      selected   = active.filter((x) => x.score >= topScore * 0.6).slice(0, 3);
+      isFallback = false;
     } else {
-      isFallback = true;
-      selectedChunks = [
-        { chunk: RESUME_CHUNKS[0], score: 0 },
-        { chunk: RESUME_CHUNKS[2], score: 0 }
+      // Fallback: bio + skills (always useful)
+      selected   = [
+        { chunk: RESUME_CHUNKS[0], score: 0, hits: [] },
+        { chunk: RESUME_CHUNKS[2], score: 0, hits: [] }
       ];
-      matchedKeywords = isGreeting ? ["greeting"] : ["general_lookup"];
+      isFallback = true;
     }
 
-    const latencyMs = parseFloat((Math.random() * 0.8 + 0.3).toFixed(2));
-    let reply = `⚡ **RAG Pipeline Retrieval Log**:\n`;
-
-    if (isFallback) {
-      if (isGreeting) {
-        reply += `Hello! I am Satya's **RAG-Powered AI Agent**. Since you said hello, I've loaded Satya's primary background profile chunks:\n\n`;
-      } else {
-        reply += `I couldn't find an exact keyword match in my database for your question ("${query}"). However, here is Satya's general profile and skill set to help you:\n\n`;
+    // Intent-aware override: if intent maps to a specific chunk, surface it
+    const intentChunkMap = {
+      contact:          "bio",
+      experience:       "experience",
+      education:        "education",
+      skills:           "skills",
+      certifications:   "certifications",
+    };
+    if (intent && intentChunkMap[intent] && !isFallback) {
+      const pinId = intentChunkMap[intent];
+      const alreadyIn = selected.some((s) => s.chunk.id === pinId);
+      if (!alreadyIn) {
+        const pinned = RESUME_CHUNKS.find((c) => c.id === pinId);
+        if (pinned) selected.unshift({ chunk: pinned, score: 999, hits: [] });
+        selected = selected.slice(0, 3);
       }
-    } else {
-      reply += `Based on Satya's resume database, the local RAG pipeline retrieved the following highly relevant context:\n\n`;
     }
 
-    selectedChunks.forEach((sc, idx) => {
-      const { chunk } = sc;
-      reply += `### 🔹 ${chunk.title} (${chunk.category})\n`;
-      chunk.content.forEach((bullet) => {
-        reply += `• ${bullet}\n`;
-      });
-      if (idx < selectedChunks.length - 1) {
-        reply += `\n`;
+    // 4. Build natural reply
+    const reply = buildReply({ selected, intent, isFallback, query, tokens });
+
+    return res.json({
+      reply,
+      _meta: {
+        intent,
+        tokens_matched: tokens,
+        chunks: selected.map((s) => ({ id: s.chunk.id, score: s.score })),
+        is_fallback: isFallback,
+        latency_ms: Date.now() - startTime
       }
     });
 
-    reply += `\n\n---\n*Feel free to ask about any specific project (RAG Pipeline, Multithreaded Task Scheduler, Parking DBMS, Linux Driver), UPS Intern experience, or GPA details!*`;
-
-    return res.json({ reply });
   } catch (error) {
-    console.error("Error in local RAG chat routing:", error);
+    console.error("Pipeline error:", error);
     return res.status(500).json({
-      error: "Failed to process chat with local RAG pipeline.",
-      reply: "⚠️ Sorry, there was an issue executing the local RAG pipeline retrieval."
+      error: "Pipeline error.",
+      reply: "⚠️ Something went wrong. Please try again."
     });
   }
 }
