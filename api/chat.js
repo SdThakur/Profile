@@ -4,10 +4,9 @@
 const STOP_WORDS = new Set([
   "a","an","the","and","or","but","is","are","was","were","of","to","in","for",
   "on","with","about","what","how","who","where","can","you","tell","me","he",
-  "his","him","satya","thakur","resume","portfolio","please","give","show","get",
+  "his","him","satya","thakur","please","give","show","get",
   "any","some","has","have","had","been","be","do","does","did","at","by","i",
-  "like","want","your","their","my","its","sure","okay","ok","yes","yep","yeah",
-  "cool","great","nice","alright","got","it","sounds","good","go","ahead","tell"
+  "want","your","their","my","its"
 ]);
 
 // ─── Knowledge base ─────────────────────────────────────────────────────────────
@@ -153,8 +152,13 @@ function tokenize(text) {
 
 function detectIntent(tokens, rawQuery) {
   const q = rawQuery.toLowerCase();
+  // Use word-boundary regex so "hi" doesn't match inside "his", "this", etc.
   for (const [intent, phrases] of Object.entries(INTENTS)) {
-    if (phrases.some((p) => q.includes(p) || tokens.includes(p))) return intent;
+    if (phrases.some((p) => {
+      const wordMatch = new RegExp(`(?<![a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z])`, 'i').test(q);
+      const tokenMatch = tokens.some((t) => t === p);
+      return wordMatch || tokenMatch;
+    })) return intent;
   }
   return null;
 }
