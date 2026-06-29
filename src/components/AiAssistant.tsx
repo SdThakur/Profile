@@ -1,65 +1,59 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bot, User, Send, Sparkles, Trash2, Shield, AlertCircle } from 'lucide-react';
+import { Bot, User, Send, Sparkles, Trash2, Shield } from 'lucide-react';
 import { ChatMessage } from '../types';
 
+// Shape of each history entry sent to the backend
+interface HistoryEntry {
+  role: 'user' | 'assistant';
+  content: string;
+  intent?: string | null;
+  chunkIds?: string[];
+}
+
 export default function AiAssistant() {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    return [
-      {
-        id: 'initial',
-        sender: 'bot',
-        text: "Hi! I'm Satya's AI Resume Assistant, powered by a localized custom RAG (Retrieval-Augmented Generation) pipeline. You can ask me any questions about Satya's background, coursework, systems projects, databases, or internship experience!",
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ];
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'initial',
+      sender: 'bot',
+      text: "Hi! I'm Satya's AI Resume Assistant, powered by a localized custom RAG (Retrieval-Augmented Generation) pipeline. You can ask me any questions about Satya's background, coursework, systems projects, databases, or internship experience!",
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
+  ]);
+
+  // Conversation history sent to the backend each turn
+  const historyRef = useRef<HistoryEntry[]>([]);
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const chatBodyRef = useRef<HTMLDivElement>(null); 
+  const chatBodyRef = useRef<HTMLDivElement>(null);
 
   const sampleQuestions = [
-    'What databases is Satya skilled in?',
-    'Explain Satya\'s RAG Pipeline project.',
-    'Tell me about his internship experience.',
-    'What is his GPA and coursework?',
+    "What databases is Satya skilled in?",
+    "Explain Satya's RAG Pipeline project.",
+    "Tell me about his internship experience.",
+    "What is his GPA and coursework?",
   ];
 
+  // ── Scroll: bring the newest message into view ──────────────────────────────
   const scrollToBottom = () => {
-  if (chatBodyRef.current) {
+    if (!chatBodyRef.current) return;
     const container = chatBodyRef.current;
-    
-    // Find the very last message element inside the container
-    const messages = container.querySelectorAll('[id^="chat-msg-"]');
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1] as HTMLElement;
-      
-      // Calculate the top position of the new message relative to the container
-      const newScrollTop = lastMessage.offsetTop - container.offsetTop - 16; // 16px padding offset
-
-      container.scrollTo({
-        top: newScrollTop,
-        behavior: 'smooth',
-      });
+    const msgs = container.querySelectorAll('[id^="chat-msg-"]');
+    if (msgs.length > 0) {
+      const last = msgs[msgs.length - 1] as HTMLElement;
+      container.scrollTo({ top: last.offsetTop - container.offsetTop - 16, behavior: 'smooth' });
     } else {
-      // Fallback to absolute bottom for the typing indicator or initial load
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth',
-      });
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
-  }
-};
+  };
 
-useEffect(() => {
-  // A tiny timeout ensures AnimatePresence has rendered the new DOM node
-  const timer = setTimeout(() => {
-    scrollToBottom();
-  }, 50);
-  
-  return () => clearTimeout(timer);
-}, [messages, loading]);
+  useEffect(() => {
+    const t = setTimeout(scrollToBottom, 50);
+    return () => clearTimeout(t);
+  }, [messages, loading]);
 
+  // ── Send a message ──────────────────────────────────────────────────────────
   const handleSend = async (textToSend: string) => {
     if (!textToSend.trim() || loading) return;
 
@@ -70,6 +64,12 @@ useEffect(() => {
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
+    // Add user turn to local history before the fetch
+    historyRef.current = [
+      ...historyRef.current,
+      { role: 'user', content: textToSend },
+    ];
+
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
@@ -78,18 +78,33 @@ useEffect(() => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: textToSend }),
+        body: JSON.stringify({
+          message: textToSend,
+          history: historyRef.current,   // ← send full history
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to connect to the assistant server.');
-      }
+      if (!response.ok) throw new Error('Failed to connect to the assistant server.');
 
       const data = await response.json();
+      const replyText: string =
+        data.reply || "Sorry, I wasn't able to compile a response right now. Please try again.";
+
+      // Append assistant turn — include intent + chunkIds for memory
+      historyRef.current = [
+        ...historyRef.current,
+        {
+          role: 'assistant',
+          content: replyText,
+          intent: data.intent ?? null,
+          chunkIds: data.chunkIds ?? [],
+        },
+      ];
+
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: data.reply || "Sorry, I wasn't able to compile a response right now. Please try again.",
+        text: replyText,
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);
@@ -106,7 +121,9 @@ useEffect(() => {
     }
   };
 
+  // ── Clear chat — also reset history ────────────────────────────────────────
   const clearChat = () => {
+    historyRef.current = [];
     setMessages([
       {
         id: 'initial',
@@ -117,13 +134,14 @@ useEffect(() => {
     ]);
   };
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <section
       id="chatbot"
       className="py-24 bg-[#0A0A0A] relative z-10 border-b border-white/5"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <motion.div
@@ -145,7 +163,7 @@ useEffect(() => {
 
         {/* Chat Window Box */}
         <div className="glass-card overflow-hidden flex flex-col h-[520px]">
-          
+
           {/* Chat Header */}
           <div className="bg-zinc-900 px-6 py-4 border-b border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -162,7 +180,6 @@ useEffect(() => {
                 </span>
               </div>
             </div>
-
             <button
               id="clear-chat-btn"
               onClick={clearChat}
@@ -187,7 +204,6 @@ useEffect(() => {
                     msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
                   }`}
                 >
-                  {/* Avatar bubble */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     msg.sender === 'user'
                       ? 'bg-gold text-black font-bold text-xs'
@@ -195,8 +211,6 @@ useEffect(() => {
                   }`}>
                     {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                   </div>
-
-                  {/* Text card */}
                   <div className="space-y-1">
                     <div className={`rounded-lg px-4 py-2.5 text-xs leading-relaxed ${
                       msg.sender === 'user'
@@ -214,7 +228,7 @@ useEffect(() => {
                 </motion.div>
               ))}
 
-              {/* Typing simulation */}
+              {/* Typing indicator */}
               {loading && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -232,10 +246,9 @@ useEffect(() => {
                 </motion.div>
               )}
             </AnimatePresence>
-            <div ref={chatBodyRef} />
           </div>
 
-          {/* Prompt suggestions inside Chat container */}
+          {/* Sample prompts */}
           <div className="p-4 bg-zinc-900/30 border-t border-white/5 flex flex-wrap gap-2 justify-center">
             {sampleQuestions.map((question, idx) => (
               <button
@@ -250,13 +263,10 @@ useEffect(() => {
             ))}
           </div>
 
-          {/* Form input controls */}
+          {/* Input */}
           <div className="p-4 bg-zinc-900/50 border-t border-white/5">
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend(input);
-              }}
+              onSubmit={(e) => { e.preventDefault(); handleSend(input); }}
               className="flex gap-2"
             >
               <input
@@ -279,7 +289,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Security / Sandboxed note */}
+        {/* Security note */}
         <div className="mt-4 flex items-center justify-center gap-1.5 text-[10px] font-mono text-zinc-600">
           <Shield className="w-3.5 h-3.5 text-gold/80" />
           <span>Server-Side Chat Session Encrypted & Isolated</span>
