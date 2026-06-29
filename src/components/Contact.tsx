@@ -42,8 +42,7 @@ export default function Contact() {
     {
       icon: MapPin,
       label: 'Location',
-      value: personalInfo.location,
-      value: 'USA'
+      value: `${personalInfo.location}, USA`,
       href: null,
     },
   ];
