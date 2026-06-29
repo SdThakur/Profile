@@ -51,7 +51,6 @@ export default function Projects() {
     { id: 'Java', label: 'Java' },
     { id: 'FastAPI', label: 'FastAPI' },
     { id: 'ChromaDB', label: 'ChromaDB' },
-    { id: 'Google Gemini', label: 'Google GenAI' },
     { id: 'PostgreSQL', label: 'PostgreSQL' },
     { id: 'Docker', label: 'Docker' },
     { id: 'Streamlit', label: 'Streamlit' },

@@ -153,18 +153,8 @@ export default function Hero({ onNavigate }: HeroProps) {
     <div class="md:col-span-8 space-y-6">
       <div>
         <h2 class="serif text-sm font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-1 mb-3">Professional Experience</h2>
-        <div class="space-y-4">
-          <div>
-            <div class="flex justify-between items-start">
-              <h3 class="font-bold text-xs text-zinc-950">UPS Intern</h3>
-              <span class="text-[9px] text-zinc-500 font-mono">06/2022 - 08/2022</span>
-            </div>
-            <p class="text-[10px] italic text-zinc-600">Remote Data Entry Specialist</p>
-            <ul class="list-disc list-inside mt-1.5 text-[10px] text-zinc-500 space-y-1">
-              <li>Executed precise remote verification of high-priority shipment routing files.</li>
-              <li>Maintained an exceptional 99% accuracy rate across 5,000+ logistics entries.</li>
-            </ul>
-          </div>
+        <div className="space-y-4">
+          {/* Experience entries removed per user request */}
         </div>
       </div>
 
@@ -173,7 +163,7 @@ export default function Hero({ onNavigate }: HeroProps) {
         <div class="space-y-4">
           <div>
             <h3 class="font-bold text-xs text-zinc-950">RAG Document Parsing AI Pipeline</h3>
-            <p class="text-[9px] text-zinc-500 font-mono">Python, FastAPI, ChromaDB, Google GenAI</p>
+            <p class="text-[9px] text-zinc-500 font-mono">Python, FastAPI, ChromaDB, Streamlit</p>
             <ul class="list-disc list-inside mt-1 text-[10px] text-zinc-500 space-y-1">
               <li>Engineered a custom backend context parser chunking 10,000+ files for semantic searching.</li>
               <li>Bypassed performance constraints, achieving an 80% reduction in query lookup latencies.</li>
@@ -568,17 +558,7 @@ export default function Hero({ onNavigate }: HeroProps) {
                       <div>
                         <h3 className="font-serif text-xs font-bold uppercase tracking-wider text-[#EDEDED] border-b border-zinc-800 pb-1 mb-3">Professional Experience</h3>
                         <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-bold text-[#EDEDED]">UPS Intern</h4>
-                              <span className="text-zinc-500 font-mono text-[10px]">06/2022 - 08/2022</span>
-                            </div>
-                            <p className="italic text-gold">Remote Data Entry Specialist</p>
-                            <ul className="list-disc list-inside mt-1.5 text-zinc-400 space-y-1">
-                              <li>Executed precise remote verification of high-priority shipment routing files.</li>
-                              <li>Maintained an exceptional 99% accuracy rate across 5,000+ logistics entries.</li>
-                            </ul>
-                          </div>
+                          {/* Experience entries removed per user request */}
                         </div>
                       </div>
 
@@ -587,7 +567,7 @@ export default function Hero({ onNavigate }: HeroProps) {
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-bold text-[#EDEDED]">RAG Document Parsing AI Pipeline</h4>
-                            <p className="text-gold font-mono text-[10px]">Python, FastAPI, ChromaDB, Google GenAI</p>
+                            <p className="text-gold font-mono text-[10px]">Python, FastAPI, ChromaDB, Streamlit</p>
                             <ul className="list-disc list-inside mt-1 text-zinc-400 space-y-1">
                               <li>Engineered a custom backend context parser chunking 10,000+ files for semantic searching.</li>
                               <li>Bypassed performance constraints, achieving an 80% reduction in query lookup latencies.</li>

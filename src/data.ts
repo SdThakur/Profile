@@ -65,12 +65,12 @@ export const projectsData: Project[] = [
   {
     id: 'rag-pipeline',
     title: 'Retrieval-Augmented Generation (RAG) Pipeline',
-    stack: ['Python', 'FastAPI', 'ChromaDB', 'Google GenAI', 'Streamlit'],
+    stack: ['Python', 'FastAPI', 'ChromaDB', 'Streamlit'],
     category: 'web-ai',
     description: [
       'Built an automated text vectorization pipeline using FastAPI and ChromaDB, parsing and search-indexing over 10,000+ high-density document chunks.',
       'Improved relevant context search retrieval by 35% with 90%+ matching precision by engineering a customized cosine similarity evaluation scheme in ChromaDB, re-calibrating the similarity threshold from 0.75 to 0.45.',
-      'Migrated downstream generation calls completely to a modern server-side GenAI SDK wrapper, establishing secure server-side API proxy routing with zero client exposure.'
+      'Migrated downstream generation calls completely to a modern server-side AI processing layer, establishing secure server-side API proxy routing with zero client exposure.'
     ],
     highlightCount: '10,000+ chunks',
     impactLabel: '80% faster search',
@@ -139,20 +139,7 @@ export const projectsData: Project[] = [
   },
 ];
 
-export const experienceData: ExperienceItem[] = [
-  {
-    id: 'ups-intern',
-    role: 'Remote Data Entry Intern',
-    company: 'UPS',
-    location: 'Remote',
-    period: 'Jun 2025 – Aug 2025',
-    bullets: [
-      'Reduced operational downtime by maintaining a 95%+ first-attempt resolution rate, by diagnosing and resolving remote data transmission errors, cloud database synchronization anomalies, and virtual workstation issues.',
-      'Achieved 99%+ accuracy across secure database systems, by processing high-volume digital transaction records, global shipment data, and manifest documentation.',
-      'Cut average completion time for 20+ daily client data requests, by streamlining digital document handling, cloud file organization, and virtual tracking workflows.',
-    ],
-  },
-];
+export const experienceData: ExperienceItem[] = [];
 
 export const certificationsData: CertificationItem[] = [
   {

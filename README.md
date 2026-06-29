@@ -16,9 +16,9 @@ An interactive, high-performance developer portfolio built with a modern full-st
 * **Featured Projects**: Highlights engineering masterpieces with live taglines, metrics, detailed breakdowns, and direct repository links.
 
 ### 3. Integrated AI Terminal Agent
-* **Real-time Streaming**: A retro terminal emulator backed by an Express server and the `@google/genai` SDK.
-* **Intelligent Querying**: Connects directly to Google's Gemini models to stream interactive, real-time responses about my biography, skill sets, and work availability.
-* **Local Terminal Fallback**: Implements high-speed local parsing for key terms (e.g., `bio`, `projects`, `contact`) if no API key is present.
+* **Local Emulator**: A retro terminal interface backed by an Express server and local parsing logic.
+* **Smart Responses**: Provides fast, pre-programmed resume and portfolio answers for biography, skills, and availability.
+* **Local Terminal Fallback**: Implements high-speed local parsing for key terms (e.g., `bio`, `projects`, `contact`) without any external SDK requirement.
 
 ---
 
@@ -36,7 +36,7 @@ An interactive, high-performance developer portfolio built with a modern full-st
   * **Node.js** & **Express** (API routing & static asset hosting)
   * **TSX** (TypeScript Execute for zero-compilation server execution in dev)
   * **Esbuild** (compiles server-side code to highly optimized bundled CommonJS)
-  * **Google GenAI SDK** (`@google/genai` for streaming AI endpoints)
+  * **Local AI Parsing** (secure, server-side resume and portfolio response routing)
 
 ---
 
@@ -61,11 +61,7 @@ Make sure you have the following installed on your machine:
    ```
 
 3. **Configure the AI Terminal (Optional)**:
-   To enable real-time AI responses in the portfolio terminal, set your Gemini API key:
-   ```bash
-   export GEMINI_API_KEY="your_gemini_api_key_here"
-   ```
-   *If no key is configured, the terminal will seamlessly fallback to robust pre-programmed local response pipelines.*
+   The terminal uses local parsing and resume content without requiring an external API key.
 
 ---
 

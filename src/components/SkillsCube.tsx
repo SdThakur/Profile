@@ -587,7 +587,7 @@ export default function SkillsCube() {
             <div className="face-title">Featured work</div>
             <div className="proj-item">
               <div className="proj-name">RAG Pipeline</div>
-              <div className="proj-tech">FastAPI · ChromaDB · Streamlit · Google GenAI</div>
+              <div className="proj-tech">FastAPI · ChromaDB · Streamlit · Local AI Parsing</div>
               <div className="proj-bullet">10,000+ doc chunks · 80% faster lookup · 35% recall boost</div>
             </div>
             <div className="proj-item">
@@ -664,7 +664,7 @@ export default function SkillsCube() {
             <div className="face-label">Experience</div>
             <div className="face-title">Work history</div>
             <div className="exp-role">Remote Data Entry Intern</div>
-            <div className="exp-co">UPS · Remote</div>
+            <div className="exp-co">Remote</div>
             <div className="exp-date">Jun 2025 – Aug 2025</div>
             <div className="exp-bullet">95%+ first-attempt resolution rate · 99%+ data accuracy · 20+ daily client requests streamlined</div>
             <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '0.5px solid rgba(55,138,221,0.15)' }}>
@@ -716,7 +716,7 @@ export default function SkillsCube() {
               </div>
               <div className="metric-card">
                 <div className="metric-val">99%</div>
-                <div className="metric-lbl">data accuracy @ UPS</div>
+                <div className="metric-lbl">data accuracy</div>
               </div>
               <div className="metric-card">
                 <div className="metric-val">Dec</div>
@@ -844,7 +844,7 @@ export default function SkillsCube() {
       <!-- LEFT: Experience -->
       <div class="face" style="position: absolute; width: 200px; height: 200px; background: rgba(15,15,15,0.9); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; padding: 12px; transform: rotateY(-90deg) translateZ(100px); backface-visibility: visible;">
         <div style="font-size: 9px; text-transform: uppercase; color: #D4AF37; letter-spacing: 1.5px; font-weight: 700;">Experience</div>
-        <div style="font-size: 12px; font-weight: bold; margin: 8px 0 4px 0; color: #fff;">UPS Intern</div>
+        <div style="font-size: 12px; font-weight: bold; margin: 8px 0 4px 0; color: #fff;">Remote Intern</div>
         <div style="font-size: 10px; color: #999; line-height: 1.3;">Remote Data Entry<br>99% Accuracy Rate</div>
       </div>
       
@@ -962,7 +962,7 @@ export default function SkillsCube() {
                         </div>
                         <div className="sim-face" style={{ transform: 'rotateY(-90deg) translateZ(88px)' }}>
                           <span className="text-[8px] uppercase tracking-wider text-gold font-bold">Experience</span>
-                          <span className="text-xs font-bold text-white mt-1">UPS Intern</span>
+                          <span className="text-xs font-bold text-white mt-1">Remote Intern</span>
                           <span className="text-[9px] text-zinc-400 mt-0.5">Data Entry</span>
                         </div>
                         <div className="sim-face" style={{ transform: 'rotateX(90deg) translateZ(88px)' }}>

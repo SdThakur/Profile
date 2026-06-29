@@ -69,72 +69,15 @@ export default function Experience() {
           </motion.p>
         </div>
 
-        {/* Experience Timeline Grid */}
+        {/* Certifications centered (removed Industry Experience column) */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-100px' }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative"
+          className="grid grid-cols-1 gap-12 relative"
         >
-          {/* Timeline Center line (visible only on large screens) */}
-          <div className="absolute left-1/2 top-4 bottom-4 w-0.5 bg-zinc-900 hidden lg:block -translate-x-1/2 pointer-events-none" />
-
-          {/* Left Side: Work Experience */}
-          <motion.div id="work-experience-timeline" variants={itemVariants} className="space-y-6">
-            <div className="flex items-center gap-2.5 mb-6">
-              <span className="w-8 h-8 rounded bg-zinc-950 border border-zinc-900 flex items-center justify-center text-gold font-serif font-bold text-sm">
-                W
-              </span>
-              <h3 className="font-serif font-bold text-lg text-[#EDEDED]">
-                Industry Experience
-              </h3>
-            </div>
-
-            {experienceData.map((exp) => (
-              <div
-                key={exp.id}
-                id={`exp-card-${exp.id}`}
-                className="glass-card p-6 relative group"
-              >
-                {/* Timeline Connector node */}
-                <div className="absolute right-[-24px] top-10 w-3 h-3 rounded-full bg-gold border-2 border-[#0A0A0A] hidden lg:block translate-x-1/2 z-20 group-hover:scale-125 transition-transform" />
-
-                <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
-                  <div>
-                    <h4 className="font-serif font-bold text-base text-[#EDEDED] leading-tight">
-                      {exp.role}
-                    </h4>
-                    <p className="text-xs font-semibold text-gold mt-1 uppercase tracking-wider">
-                      {exp.company}
-                    </p>
-                  </div>
-                  <div className="text-right text-[10px] font-mono text-zinc-500 uppercase tracking-wider space-y-1">
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {exp.period}
-                    </div>
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {exp.location}
-                    </div>
-                  </div>
-                </div>
-
-                <ul className="space-y-3">
-                  {exp.bullets.map((bullet, idx) => (
-                    <li key={idx} className="flex gap-2.5 text-xs text-zinc-400 leading-relaxed font-sans">
-                      <ArrowRight className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-1" />
-                      <span>{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Right Side: Certifications & Virtual Experience */}
-          <motion.div id="virtual-experience-timeline" variants={rightVariants} className="space-y-6 lg:mt-0">
+          <motion.div id="virtual-experience-timeline" variants={rightVariants} className="space-y-6 lg:mt-0 mx-auto max-w-3xl">
             <div className="flex items-center gap-2.5 mb-6">
               <span className="w-8 h-8 rounded bg-zinc-950 border border-zinc-900 flex items-center justify-center text-gold font-serif font-bold text-sm">
                 C

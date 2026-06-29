@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Code, Layers, Cpu, Database, Terminal, CheckCircle2, Sparkles } from 'lucide-react';
 import { skillsData } from '../data';
 import InteractiveSkillsCube from './InteractiveSkillsCube';
@@ -40,15 +40,15 @@ export default function Skills() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: 'spring', stiffness: 100, damping: 15 },
+      transition: { duration: 0.35 },
     },
   };
 
-  // Filter categories based on selection
+  const normalizedSelection = selectedCategory.trim().toLowerCase();
   const displayedCategories =
-    selectedCategory === 'all'
+    normalizedSelection === 'all'
       ? skillsData
-      : skillsData.filter((cat) => cat.id === selectedCategory);
+      : skillsData.filter((cat) => cat.id.toLowerCase() === normalizedSelection);
 
   return (
     <section
@@ -131,18 +131,20 @@ export default function Skills() {
           id="skills-bento-grid"
           variants={containerVariants}
           initial="hidden"
-          whileInView="visible"
+          animate="visible"
           viewport={{ once: true, margin: '-100px' }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          <AnimatePresence mode="popLayout">
-            {displayedCategories.map((category) => (
+          {displayedCategories.length === 0 ? (
+            <div className="col-span-full rounded-xl border border-zinc-800 bg-zinc-950/80 p-8 text-center text-sm text-zinc-400">
+              No skills match this filter. Please select a different category.
+            </div>
+          ) : (
+            displayedCategories.map((category) => (
               <motion.div
                 key={category.id}
                 id={`skill-card-${category.id}`}
                 variants={cardVariants}
-                layout
-                exit={{ opacity: 0, scale: 0.95 }}
                 className="glass-card p-6 relative overflow-hidden flex flex-col justify-between"
               >
                 <div>
@@ -180,8 +182,7 @@ export default function Skills() {
                 {/* Nice visual decoration on card background */}
                 <div className="absolute bottom-[-15px] right-[-15px] w-24 h-24 bg-gradient-to-tr from-gold/5 to-transparent rounded-full pointer-events-none" />
               </motion.div>
-            ))}
-          </AnimatePresence>
+            )))}
         </motion.div>
 
         {/* Featured Technical Context Callout */}

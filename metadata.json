@@ -1,6 +1,5 @@
 {
   "name": "Satya Thakur Portfolio",
   "description": "Interactive animated portfolio for Satya Thakur, Computer Science student at UMBC, featuring custom motion transitions, a projects masonry grid, local lead collection, and an AI resume chatbot.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "requestFramePermissions": []
 }

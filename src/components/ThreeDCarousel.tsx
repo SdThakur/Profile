@@ -34,9 +34,9 @@ const CAROUSEL_SLIDES: ProjectSlide[] = [
     details: [
       'Built an automated text vectorization pipeline using FastAPI and ChromaDB.',
       'Optimized semantic lookup recall by 35% with a calibrated cosine similarity threshold (0.75 to 0.45).',
-      'Future-proofed pipeline using a secure, server-side GenAI SDK wrapper.'
+      'Future-proofed pipeline using a secure, server-side AI processing wrapper.'
     ],
-    tech: ['Python', 'FastAPI', 'ChromaDB', 'Google GenAI', 'Streamlit'],
+    tech: ['Python', 'FastAPI', 'ChromaDB', 'Streamlit'],
     githubUrl: 'https://github.com/SdThakur/RAG-Pipeline.git'
   },
   {

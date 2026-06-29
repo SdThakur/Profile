@@ -247,12 +247,12 @@ export default function FeaturedProjects() {
                     </div>
                     <div className="flex gap-3 text-xs text-zinc-300">
                       <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                      <span>Modernized architecture built natively with a secure server-side GenAI SDK wrapper.</span>
+                      <span>Modernized architecture built natively with secure server-side AI parsing logic.</span>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-8">
-                    {['FastAPI', 'ChromaDB', 'Google GenAI', 'Streamlit', 'Python'].map((t) => (
+                    {['FastAPI', 'ChromaDB', 'Streamlit', 'Python'].map((t) => (
                       <span key={t} className="px-2 py-0.5 text-[10px] tracking-wider uppercase font-mono bg-zinc-950 border border-zinc-900 text-zinc-400 rounded">
                         {t}
                       </span>
@@ -362,7 +362,7 @@ export default function FeaturedProjects() {
                     </div>
                   </div>
 
-                  {/* Step 4: GenAI SDK output */}
+                  {/* Step 4: AI processing output */}
                   <div className={`p-3 rounded border transition-all ${ragStep >= 4 ? 'bg-zinc-900/60 border-zinc-800 text-white' : 'border-transparent opacity-40'}`}>
                     <div className="flex justify-between items-center mb-1 text-[10px] text-zinc-500 uppercase font-bold">
                       <span>Step 5: Generative AI LLM Response</span>

@@ -126,9 +126,9 @@ const RESUME_CHUNKS = [
       "Accelerated semantic document retrieval across 10,000+ document chunks, cutting retrieval lookup times by 80%.",
       "Ingested text files into a ChromaDB vector database utilizing sentence-transformer embeddings.",
       "Calibrated the similarity threshold from 0.75 to 0.45, boosting document retrieval recall by 35% with 90%+ precision.",
-      "Future-proofed the system by migrating the generation layer to the modern google-genai SDK across 15+ API call sites."
+      "Future-proofed the system by migrating the generation layer to a modern server-side AI processing pipeline."
     ],
-    keywords: ['rag', 'pipeline', 'ai', 'document', 'search', 'retrieval', 'chroma', 'chromadb', 'embeddings', 'vector', 'similarity', 'fastapi', 'streamlit', 'gemini', 'sdk', 'transformers', 'sentence-transformers', 'threshold', 'precision', 'recall', 'nlp', 'llm', 'semantic']
+    keywords: ['rag', 'pipeline', 'ai', 'document', 'search', 'retrieval', 'chroma', 'chromadb', 'embeddings', 'vector', 'similarity', 'fastapi', 'streamlit', 'sdk', 'transformers', 'sentence-transformers', 'threshold', 'precision', 'recall', 'nlp', 'llm', 'semantic']
   },
   {
     id: 'parking-mgmt',
@@ -380,7 +380,7 @@ app.post('/api/chat', (req, res) => {
     });
 
     // Add a professional closing statement
-    reply += `\n\n---\n*Feel free to ask about any specific project (RAG Pipeline, Multithreaded Task Scheduler, Parking DBMS, Linux Driver), UPS Intern experience, or GPA details!*`;
+    reply += `\n\n---\n*Feel free to ask about any specific project (RAG Pipeline, Multithreaded Task Scheduler, Parking DBMS, Linux Driver), or GPA details!*`;
 
     return res.json({ reply });
   } catch (error: any) {

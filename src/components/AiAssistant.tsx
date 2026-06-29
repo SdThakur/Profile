@@ -21,7 +21,7 @@ export default function AiAssistant() {
   const sampleQuestions = [
     'What databases is Satya skilled in?',
     'Explain Satya\'s RAG Pipeline project.',
-    'Tell me about his experience at UPS.',
+    'Tell me about his internship experience.',
     'What is his GPA and coursework?',
   ];
 
